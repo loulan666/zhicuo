@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 const root = new URL('./public/', import.meta.url);
 const port = Number(process.env.PORT || 3180);
 const origin = `http://127.0.0.1:${port}`;
-const assets = {'/':'index.html','/app.js':'app.js','/style.css':'style.css','/runner.js':'runner.js','/data.js':'data.js'};
+const assets = {'/learning':'learning.html','/learning.js':'learning.js','/learning.css':'learning.css','/curriculum.js':'curriculum.js','/':'index.html','/app.js':'app.js','/style.css':'style.css','/runner.js':'runner.js','/data.js':'data.js'};
 let calls = [];
 const json = (res, status, body) => { res.writeHead(status, {'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'}); res.end(JSON.stringify(body)); };
 export const server = http.createServer(async (req,res) => {
