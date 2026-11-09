@@ -1,0 +1,13 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {mkdtemp,rm} from 'node:fs/promises';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
+import {createStore} from '../lib/store.mjs';
+import {makeDocument,retrieve} from '../lib/knowledge.mjs';
+import {buildRunArgs,runtimes} from '../lib/sandbox.mjs';
+import {wrap} from '../public/exercises.js';
+test('concurrent writes preserve all evidence',async()=>{const dir=await mkdtemp(join(tmpdir(),'zhicuo-test-'));try{const s=createStore(dir);await Promise.all(Array.from({length:20},(_,i)=>s.update(d=>d.attempts.push(i))));assert.equal((await s.read()).attempts.length,20);}finally{await rm(dir,{recursive:true});}});
+test('retrieval filters languages and keeps source identifiers',()=>{const docs=[makeDocument({title:'Python循环',language:'python',text:'Python循环使用 range 函数遍历整数。range(3) 包含0、1、2。'}),makeDocument({title:'Java循环',language:'java',text:'Java循环使用for语句，通常将起点设置为0。'})];const r=retrieve(docs,'循环 range','python');assert.equal(r.length,1);assert.equal(r[0].documentId,docs[0].id);assert.equal(r[0].index,0);});
+test('document validation rejects empty and oversized content',()=>{assert.throws(()=>makeDocument({title:'x',text:''}));assert.throws(()=>makeDocument({title:'x',text:'a'.repeat(150001)}));});
+test('all runners disable network, limit resources, and never mount host files',()=>{for(const language of Object.keys(runtimes)){const args=buildRunArgs(language,'test');assert.ok(args.includes('--network=none'));assert.ok(args.includes('--read-only'));assert.ok(args.includes('--cap-drop=ALL'));assert.ok(args.includes('--user=65534:65534'));assert.ok(!args.some(s=>s==='-v'||s.startsWith('--mount')));assert.ok(wrap(language,'CODE',[1,2]).includes('CODE'));}});

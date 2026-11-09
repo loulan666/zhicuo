@@ -1,16 +1,18 @@
+import {platform} from './lib/platform.mjs';
 import http from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 const root = new URL('./public/', import.meta.url);
 const port = Number(process.env.PORT || 3180);
 const origin = `http://127.0.0.1:${port}`;
-const assets = {'/learning':'learning.html','/learning.js':'learning.js','/learning.css':'learning.css','/curriculum.js':'curriculum.js','/':'index.html','/app.js':'app.js','/style.css':'style.css','/runner.js':'runner.js','/data.js':'data.js'};
+const assets = {'/platform':'platform.html','/platform.js':'platform.js','/platform.css':'platform.css','/legacy':'index.html','/learning':'learning.html','/learning.js':'learning.js','/learning.css':'learning.css','/curriculum.js':'curriculum.js','/':'platform.html','/app.js':'app.js','/style.css':'style.css','/runner.js':'runner.js','/data.js':'data.js'};
 let calls = [];
 const json = (res, status, body) => { res.writeHead(status, {'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'}); res.end(JSON.stringify(body)); };
 export const server = http.createServer(async (req,res) => {
   res.setHeader('X-Content-Type-Options','nosniff');
   res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; worker-src 'self'; frame-ancestors 'none'");
   if(req.headers.host !== `127.0.0.1:${port}` && req.headers.host !== `localhost:${port}`) return json(res,403,{error:'INVALID_HOST'});
+  if(await platform(req,res))return;
   if(req.url === '/api/status' && req.method === 'GET') return json(res,200,{ai:!!(process.env.AI_API_KEY && process.env.AI_MODEL)});
   if(req.url === '/api/hint' && req.method === 'POST') {
     if(req.headers.origin !== origin && req.headers.origin !== `http://localhost:${port}`) return json(res,403,{error:'INVALID_ORIGIN'});

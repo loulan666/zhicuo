@@ -1,0 +1,6 @@
+import assert from 'node:assert/strict';
+import {runtimeStatus,execute} from '../lib/sandbox.mjs';
+import {wrap} from '../public/exercises.js';
+const solutions={python:'def solve(numbers):\n    return sum(1 for n in numbers if n > 0)',javascript:'function solve(a){return a.filter(n=>n>0).length}',typescript:'function solve(a:number[]):number{return a.filter(n=>n>0).length}',java:'static int solve(int[] a){int n=0;for(int x:a)if(x>0)n++;return n;}',c:'int solve(int a[],int length){int n=0;for(int i=0;i<length;i++)if(a[i]>0)n++;return n;}',cpp:'int solve(const std::vector<int>& a){int n=0;for(int x:a)if(x>0)n++;return n;}',go:'func solve(a []int) int { n:=0; for _,x:=range a {if x>0 {n++}}; return n }'};
+const status=await runtimeStatus();if(!status.ready||status.languages.some(l=>!l.ready)){console.error('BLOCKED: Docker and all language images must be ready.');process.exit(1);}
+for(const [language,code] of Object.entries(solutions)){for(const input of [[-1,0,2],[]]){const r=await execute(language,wrap(language,code,input));assert.equal(r.code,0,`${language}: ${r.stderr} ${r.reason}`);assert.equal(r.stdout.trim(),input.length?'1':'0');}console.log(`${language}: normal and empty cases passed`);}
