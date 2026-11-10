@@ -13,5 +13,11 @@ export const exercises=[
  {id:'even',title:'偶数计数',dimensions:[1,2,4],description:'返回偶数的数量。0 和负偶数也属于偶数。',tests:[{input:[2,3,4],expected:2},{input:[0,-2,3],expected:2},{input:[],expected:0},{input:[1,5],expected:0}],hint:['不要遗漏零和负偶数。','整数除以 2 余数为 0 时是偶数。','检查取模结果是否等于 0，再递增计数。']},
  {id:'maximum',title:'最大值与空输入',dimensions:[3,4,5],description:'返回数组最大值。为统一跨语言协议，空数组约定返回 0。',tests:[{input:[1,5,2],expected:5},{input:[-7,-3,-9],expected:-3},{input:[],expected:0},{input:[0],expected:0}],hint:['全部为负数时，初值 0 会有什么问题？','先处理空数组，再以真实元素为初始候选。','从第一个元素初始化最大值，逐个比较并更新。']}
 ];
+const retestInputs={positive:[[0,-4,7,0,2],[-8,-1],[],[9]],sum:[[4,-7,2],[0,0],[],[-5]],even:[[-4,0,5,8],[1,-3],[],[2]],maximum:[[-11,-2,-6],[0,-1],[],[12]]};
+for(const base of [...exercises]){
+ const expected=a=>base.id==='positive'?a.filter(n=>n>0).length:base.id==='sum'?a.reduce((s,n)=>s+n,0):base.id==='even'?a.filter(n=>n%2===0).length:a.length?Math.max(...a):0;
+ exercises.push({...base,id:base.id+'-retest',retestOf:base.id,title:base.title+' · 复测',description:base.description+' 使用另一组输入独立验证；通过仅表示本组测试符合要求。',tests:retestInputs[base.id].map(input=>({input,expected:expected(input)}))});
+}
+
 export const starter=language=>wrappers[language]?.start;
 export function wrap(language,code,input){if(!wrappers[language])throw new Error('INVALID_LANGUAGE');return wrappers[language].wrap(code,input);}
