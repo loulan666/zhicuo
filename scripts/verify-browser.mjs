@@ -1,10 +1,20 @@
+import {languages} from '../public/curriculum.js';
+import {assessmentQuestions} from '../public/assessment.js';
 import {chromium} from 'playwright';import {mkdtemp,rm,mkdir} from 'node:fs/promises';import {tmpdir} from 'node:os';import {join} from 'node:path';import assert from 'node:assert/strict';
 const dir=await mkdtemp(join(tmpdir(),'zhicuo-ui-'));process.env.DATA_DIR=dir;process.env.PORT='3185';const {server}=await import('../server.mjs');await new Promise(r=>server.listen(3185,'127.0.0.1',r));let browser;
 try{browser=await chromium.launch({headless:true});const page=await browser.newPage({viewport:{width:1440,height:1000}});const errors=[];page.on('pageerror',e=>errors.push(e.message));await page.goto('http://127.0.0.1:3185/');await page.getByRole('heading',{name:'每一次尝试，都有下一步。'}).waitFor();await mkdir('work/screenshots',{recursive:true});await page.screenshot({path:'work/screenshots/home.png',fullPage:true});
 for(const name of ['课程与知识图谱','基础测评','编程实验','课程资料库','AI 诊断工作台','补弱与复测','学习画像','运行环境']){await page.getByRole('navigation').getByRole('button',{name,exact:true}).click();await page.getByRole('heading',{name,exact:true,level:1}).waitFor();console.log('page OK: '+name);}
-await page.getByRole('navigation').getByRole('button',{name:'基础测评',exact:true}).click();for(let i=0;i<6;i++)await page.locator('input[name="q'+i+'"]').nth([1,0,0,1,1,1][i]).check();await page.getByRole('button',{name:'提交测评',exact:true}).click();await page.getByText('已更新测评历史、雷达图和学习画像。').waitFor();
+await page.getByRole('navigation').getByRole('button',{name:'基础测评',exact:true}).click();
+await page.getByRole('button',{name:'提交测评',exact:true}).click();await page.getByText('还有未回答的问题；不确定时可选“不知道”。').waitFor();
+await page.locator('input[name="q0"]').nth(1).check();await page.reload();await page.getByRole('navigation').getByRole('button',{name:'基础测评',exact:true}).click();assert.equal(await page.locator('input[name="q0"]').nth(1).isChecked(),true);
+const qs=assessmentQuestions(languages.find(l=>l.id==='python'));
+for(let section=0;section<6;section++){for(let i=section*3;i<section*3+3;i++)await page.locator('input[name="q'+i+'"]').nth(i<2?3:qs[i].answer).check();if(section<5)await page.getByRole('button',{name:'下一节',exact:true}).click();}
+await page.getByRole('button',{name:'提交测评',exact:true}).click();await page.getByText('已更新测评历史、雷达图和学习画像。').waitFor();await page.getByRole('button',{name:'查看画像',exact:true}).click();assert.equal(await page.getByText('100% · 3/3 题',{exact:true}).count(),5);await page.getByText('33% · 1/3 题',{exact:true}).waitFor();await page.getByText('2 题待复习',{exact:false}).waitFor();await page.screenshot({path:'work/screenshots/profile-v2.png',fullPage:true});await page.getByText('1. 变量与类型 · 这段代码的输出是什么？',{exact:true}).click();await page.getByRole('button',{name:'复习这个知识点 →'}).first().click();await page.getByRole('heading',{name:'学习目标',exact:true}).waitFor();await page.screenshot({path:'work/screenshots/course-v2.png',fullPage:true});
+
+if(process.env.UI_ONLY!=='1'){
 await page.getByRole('navigation').getByRole('button',{name:'编程实验',exact:true}).click();await page.getByRole('textbox',{name:'实验代码'}).fill('def solve(numbers):\n    return sum(n > 0 for n in numbers)');await page.getByRole('button',{name:'运行全部测试'}).click();await page.getByRole('button',{name:'进入复测 / 查看进展 →'}).waitFor({timeout:90000});console.log('assessment + real code execution OK');
 await page.getByRole('navigation').getByRole('button',{name:'AI 诊断工作台',exact:true}).click();await page.getByRole('button',{name:'开始证据诊断'}).click();await page.getByRole('heading',{name:/诊断报告/}).waitFor({timeout:100000});await page.screenshot({path:'work/screenshots/coach.png',fullPage:true});console.log('real AI workflow + persistence OK');
+}else console.log('UI_ONLY: Docker and AI integration not executed');
 await page.setViewportSize({width:390,height:844});await page.getByRole('navigation').getByRole('button',{name:'学习总览',exact:true}).click();await page.screenshot({path:'work/screenshots/mobile.png',fullPage:true});const overflow=await page.evaluate(()=>document.documentElement.scrollWidth>window.innerWidth);assert.equal(overflow,false,'mobile page overflows');assert.deepEqual(errors,[]);console.log('mobile width + no JS errors OK');
 }finally{if(browser)await browser.close();await new Promise(r=>server.close(r));await rm(dir,{recursive:true,force:true});}
 

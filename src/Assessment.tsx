@@ -1,0 +1,20 @@
+import React,{useState} from 'react';
+import {assessmentQuestions,assessmentVersion} from '../public/assessment.js';
+import {dimensions} from '../public/curriculum.js';
+export function Assessment({language,onSubmit,onProfile}:{language:any;onSubmit:(data:unknown)=>Promise<void>;onProfile:()=>void}){
+ const questions=assessmentQuestions(language),key=`assessment:${assessmentVersion}:${language.id}`;
+ const [answers,setAnswers]=useState<Record<number,number>>(()=>{try{const saved=JSON.parse(localStorage.getItem(key)||'{}');return Object.fromEntries(Object.entries(saved).filter(([k,v])=>Number.isInteger(+k)&&+k>=0&&+k<questions.length&&Number.isInteger(v)&&Number(v)>=0&&Number(v)<4).map(([k,v])=>[k,Number(v)]));}catch{return {};}});
+ const [section,setSection]=useState(0),[submitted,setSubmitted]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState('');
+ function choose(index:number,value:number){const next={...answers,[index]:value};setAnswers(next);try{localStorage.setItem(key,JSON.stringify(next));}catch{setError('本次答案可提交，但浏览器无法保存草稿。');}}
+ async function submit(){const missing=questions.findIndex((_,i)=>answers[i]===undefined);if(missing>=0){setSection(Math.floor(missing/3));setError('还有未回答的问题；不确定时可选“不知道”。');return;}setBusy(true);setError('');try{await onSubmit({language:language.id,version:assessmentVersion,answers:questions.map((_,i)=>answers[i])});setSubmitted(true);try{localStorage.removeItem(key);}catch{}}catch(e){setError((e as Error).message);}finally{setBusy(false);}}
+ return <><section className="panel learningbox"><h2>先建立有依据的学习起点</h2><p>18 题，六个维度，每维 3 题，覆盖代码阅读、执行推演和错误排查。预计 8–12 分钟，可选“不知道”；答案草稿保存在当前浏览器。</p><p>已回答 {Object.keys(answers).length} / 18 · 第 {section+1} / 6 节</p><progress aria-label="测评完成进度" max={18} value={Object.keys(answers).length}/><div className="languagebar">{dimensions.map((name,i)=><button className={`button ${section===i?'primary':''}`} disabled={busy} key={name} onClick={()=>setSection(i)}>{name} {questions.filter((q,j)=>q.dimension===i&&answers[j]!==undefined).length}/3</button>)}</div><p>这是入门筛查，不是能力认证。重复题目可能受记忆影响；新旧题库结果分别保留。</p></section>
+ {questions.map((q,i)=>q.dimension===section&&<article className="panel quiz" key={i}><h3>{i+1}. {q.prompt}</h3><pre>{q.code}</pre><p className="subtle">{language.note}</p><div className="options">{q.options.map((option,j)=><label key={j}><input type="radio" name={`q${i}`} disabled={submitted||busy} checked={answers[i]===j} onChange={()=>choose(i,j)}/>{option}</label>)}</div>{submitted&&<p className="feedback">{answers[i]===q.answer?'✓ 回答正确':'建议补练'} · {q.explanation}</p>}</article>)}
+ <p role="status">{error|| (submitted?'已更新测评历史、雷达图和学习画像。':'')}</p><div className="actionrow"><button className="button" disabled={busy||section===0} onClick={()=>setSection(section-1)}>上一节</button>{section<5&&<button className="button" disabled={busy} onClick={()=>setSection(section+1)}>下一节</button>}{!submitted?<button className="button primary" disabled={busy} onClick={submit}>{busy?'正在保存…':'提交测评'}</button>:<button className="button" onClick={()=>{setAnswers({});setSubmitted(false);setSection(0);setError('');}}>重新测评</button>}<button className="button" disabled={busy} onClick={onProfile}>查看画像</button></div></>;
+}
+
+export function AssessmentReview({language,record,onReview}:{language:any;record:any;onReview:(dimension:number)=>void}){
+ if(!record)return null;
+ const questions=assessmentQuestions(language,record.version||'foundation-v1');
+ const wrong=questions.map((q,i)=>({...q,chosen:record.answers[i],index:i})).filter(q=>q.chosen!==q.answer);
+ return <section className="panel learningbox spaced"><h2>最近测评错题回顾</h2><p>{new Date(record.time).toLocaleString()} · {record.total} 题 · {wrong.length} 题待复习</p>{wrong.length===0?<p>本次阅读题全部答对。继续用独立编程实验验证理解。</p>:wrong.map(q=><details key={q.index}><summary>{q.index+1}. {dimensions[q.dimension]} · {q.prompt}</summary><pre className="code-example">{q.code}</pre><p>你的选择：{q.options[q.chosen]||'未作答'}；正确选择：{q.options[q.answer]}</p><p>{q.explanation}</p><button className="button" onClick={()=>onReview(q.dimension)}>复习这个知识点 →</button></details>)}</section>;
+}

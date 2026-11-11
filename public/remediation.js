@@ -21,7 +21,7 @@ export function learningPlan(language,assessments,attempts){
   // A verification must follow the latest successful base submission and be unassisted.
   const verification=variant&&repaired?history.filter(a=>a.exercise===variant.id&&a.time>last.time).at(-1):null;
   const verified=!!verification?.passed&&!verification.hints;
-  const weak=!!latest&&task.dimensions.some(d=>latest.scores[d]===0);
+  const weak=!!latest&&task.dimensions.some(d=>Number.isFinite(latest.scores[d])&&latest.scores[d]<67);
   return {id:task.id,title:task.title,dimensions:task.dimensions,variant:variant?.id,
    status:verified?'复测通过':repaired?'待独立复测':last?'待修正':weak?'建议补练':'待实践',
    priority:last&&!last.passed?0:weak&&!verified?1:repaired&&!verified?2:verified?4:3,
