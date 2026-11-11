@@ -41,7 +41,7 @@ pages=[
 ('安装启动','准备 Node.js 22+、Docker Desktop 与 WSL2。执行 npm ci、npm run build；复制 .env.example 为 .env 并填写自己的模型密钥。启动 Docker，运行 scripts/setup-runtimes.ps1 下载镜像，然后 npm start。浏览器访问 http://127.0.0.1:3180/。'),
 ('验证命令','npm test；npm run typecheck；node scripts/verify-runtimes.mjs；node scripts/verify-submissions.mjs。首次下载需要联网；模型问答持续需要网络，准备好的容器可在禁网环境运行学生代码。'),
 ('提交材料','代码仓库须公开或给予评审访问权限，保留真实 Git 历史。演示视频应为 1080p 以上、MP4、5–8 分钟、普通话讲解。技术文档不超过 30 页。公网演示按提供要求为可选项。本地 Git 不能替代可访问的评审仓库。'),
-('原创与后续','本项目未复制 DeepTutor 源码，第三方依赖见 package-lock.json。开发使用 AI 辅助，团队应理解实现并如实答辩。下一步扩充题库、拆分页面组件、评估检索质量并开展学生试用。B 组和团队信息已确认。公开仓库为 github.com/loulan666/zhicuo。最终视频由团队自行录制，并在赛事系统完成材料提交。')])]
+('项目实现与后续','知错将测评、容器执行、证据诊断与复测连接为学习流程，第三方依赖见 package-lock.json。开发使用 AI 辅助，团队应理解实现并如实答辩。下一步扩充题库、拆分页面组件、评估检索质量并开展学生试用。B 组和团队信息已确认。公开仓库为 github.com/loulan666/zhicuo。最终视频由团队自行录制，并在赛事系统完成材料提交。')])]
 out=Path('output/pdf');out.mkdir(parents=True,exist_ok=True)
 c=canvas.Canvas(str(out/'知错-技术说明.pdf'),pagesize=A4);w,h=A4
 style=ParagraphStyle('body',fontName='Chinese',fontSize=10.5,leading=18,textColor=HexColor('#344b45'),wordWrap='CJK')

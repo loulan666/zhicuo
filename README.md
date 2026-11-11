@@ -2,7 +2,7 @@
 
 公开代码仓库：https://github.com/loulan666/zhicuo
 
-独立实现的 React + TypeScript 学习平台，Node.js 后端。本项目没有复制 DeepTutor 源码。
+知错是“七场五点八二拉菲”团队面向编程初学者的 AI 实验诊断与补弱平台。项目采用 React + TypeScript 前端与 Node.js 后端，将基础测评、真实代码运行、AI 证据诊断和针对性复测连接成完整的学习流程。
 
 ## 启动
 
