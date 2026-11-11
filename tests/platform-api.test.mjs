@@ -16,3 +16,11 @@ test('text upload, retrieval, export and delete complete roundtrip',async()=>{le
 test('tutor does not fake replies without a key',async()=>{const r=await post('tutor',{language:'python',query:'循环是什么'});assert.equal(r.status,503);assert.equal((await r.json()).error,'AI_NOT_CONFIGURED');});
 
 test('v2 grading ignores client scores and validates version and length',async()=>{const {languages}=await import('../public/curriculum.js');const {assessmentQuestions}=await import('../public/assessment.js');const answers=assessmentQuestions(languages[0]).map(q=>q.answer);const response=await post('assessment',{language:'python',version:'foundation-v2',answers,correct:0,scores:[0]});assert.equal(response.status,200);const r=await response.json();assert.equal(r.correct,18);assert.equal(r.total,18);assert.equal(r.counts[0].total,3);assert.equal((await post('assessment',{language:'python',version:'foundation-v3',answers})).status,400);assert.equal((await post('assessment',{language:'python',version:'foundation-v2',answers:answers.slice(0,6)})).status,400);});
+
+test('adaptive endpoints require owned source evidence and a configured model',async()=>{
+ assert.equal((await post('generate-practice',{language:'python',id:'missing'})).status,400);
+ const {createStore}=await import('../lib/store.mjs');await createStore(dir).update(s=>s.attempts.push({id:'source-test',language:'python',exercise:'positive',time:Date.now(),code:'def solve(a): return 0',passed:false,results:[{input:[1],expected:1,actual:'0',pass:false}]}));
+ assert.equal((await post('generate-practice',{language:'java',id:'source-test'})).status,400);
+ const r=await post('generate-practice',{language:'python',id:'source-test'});assert.equal(r.status,503);assert.equal((await r.json()).error,'AI_NOT_CONFIGURED');
+ assert.equal((await post('review-practice',{language:'python',id:'missing'})).status,400);
+});

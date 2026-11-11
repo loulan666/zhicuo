@@ -1,4 +1,4 @@
 @echo off
 cd /d "%~dp0"
-node --env-file-if-exists=.env server.mjs
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0scripts\start-local.ps1"
 pause

@@ -1,6 +1,6 @@
 {
   "name": "zhicuo",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -8,7 +8,11 @@
     "test": "node --test tests/*.test.mjs",
     "build": "node scripts/build.mjs",
     "typecheck": "tsc --noEmit",
-    "test:browser": "node --env-file-if-exists=.env scripts/verify-browser.mjs"
+    "test:browser": "node --env-file-if-exists=.env scripts/verify-browser.mjs",
+    "test:adaptive": "node --env-file-if-exists=.env scripts/verify-adaptive.mjs",
+    "test:languages": "node --env-file-if-exists=.env scripts/verify-adaptive-languages.mjs",
+    "check:ready": "node --env-file-if-exists=.env scripts/check-ready.mjs",
+    "package:release": "node scripts/package-release.mjs"
   },
   "engines": {
     "node": ">=22"
